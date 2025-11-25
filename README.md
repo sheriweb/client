@@ -1,16 +1,46 @@
-# React + Vite
+# React Frontend (Vite + Tailwind)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Simple React app for importing/searching websites and scraping details from a FastAPI backend.
 
-Currently, two official plugins are available:
+## Requirements
+- Node.js 18+
+- npm (or pnpm/yarn)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setup (local)
+1) Install deps
+```
+npm install
+```
 
-## React Compiler
+2) Configure API base URL
+- Create `.env` (or `.env.local`) and set:
+```
+VITE_API_BASE=http://localhost:8010
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+3) Run dev server
+```
+npm run dev
+```
+Open http://localhost:5173
 
-## Expanding the ESLint configuration
+## Build
+```
+npm run build
+npm run preview  # optional local preview
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Environment
+- `VITE_API_BASE` — Backend API base (e.g. https://your-api.onrender.com)
+
+## Deployment (Netlify)
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Environment variables: set `VITE_API_BASE`
+
+## Features
+- Import CSV/XLSX with flexible header detection
+- Google Maps listings import (with aggressive mode)
+- Enrich per row and “Get details (all)” with concurrency
+- Results pagination and CSV export
+- Clear results
