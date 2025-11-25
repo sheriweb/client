@@ -540,8 +540,18 @@ export default function App() {
               e.preventDefault();
               setMapsLoading(true); setMapsError(''); setMapsRows([]);
               try {
+                // normalize URL: drop obvious trackers and force English/US
+                let murl = mapsUrl.trim();
+                try {
+                  const u = new URL(murl);
+                  // drop g_ep etc.
+                  u.searchParams.delete('g_ep');
+                  if (!u.searchParams.has('hl')) u.searchParams.set('hl','en');
+                  if (!u.searchParams.has('gl')) u.searchParams.set('gl','us');
+                  murl = u.toString();
+                } catch { murl = mapsUrl.trim(); }
                 const res = await postJSON('/api/scrape/maps', {
-                  mapsUrl,
+                  mapsUrl: murl,
                   limit: Math.max(1, Math.min(500, Number(mapsLimit)||50)),
                   includeNoWebsite: !!mapsIncludeNoWebsite,
                   aggressive: !!mapsAggressive,
