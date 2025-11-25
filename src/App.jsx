@@ -60,6 +60,8 @@ export default function App() {
   const [mapsPage, setMapsPage] = useState(1);
   const [mapsPageSize, setMapsPageSize] = useState(20);
   const [mapsAggressive, setMapsAggressive] = useState(false);
+  const [mapsEnriching, setMapsEnriching] = useState(false);
+  const [mapsEnrichDone, setMapsEnrichDone] = useState(0);
 
   // Saved search presets (chips)
   const presets = [
@@ -591,7 +593,44 @@ export default function App() {
 
             <div className="mt-6 flex items-center justify-between">
               <h3 className="text-sm text-gray-500 dark:text-gray-400">Listings</h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-xs text-indigo-700">{mapsRows.length} items</span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-xs text-indigo-700">{mapsRows.length} items</span>
+                <Button
+                  disabled={mapsRows.filter(r=>!!r.website).length===0 || mapsEnriching}
+                  onClick={async ()=>{
+                    if (mapsEnriching) return;
+                    const targets = mapsRows.map((r, i)=>({ idx: i, site: r.website })).filter(x=>!!x.site);
+                    if (targets.length === 0) { setToast('No websites to fetch'); return; }
+                    setMapsEnriching(true); setMapsEnrichDone(0); setToast(`Fetching details 0/${targets.length}...`);
+                    try {
+                      const pool = Math.min(8, targets.length);
+                      let ptr = 0;
+                      const worker = async ()=>{
+                        while (true) {
+                          const my = ptr; ptr += 1;
+                          if (my >= targets.length) break;
+                          const t = targets[my];
+                          try {
+                            const res = await postJSON('/api/scrape/url', { url: t.site, crawlDepth: 1 });
+                            setMapsRows(prev=>{
+                              const arr = prev.slice();
+                              if (arr[t.idx]) arr[t.idx] = { ...arr[t.idx], ...res.data };
+                              return arr;
+                            });
+                          } catch { /* ignore */ }
+                          setMapsEnrichDone(prev=>{
+                            const n = prev + 1; setToast(`Fetching details ${n}/${targets.length}...`); return n;
+                          });
+                        }
+                      };
+                      await Promise.all(Array.from({length: pool}, ()=>worker()));
+                      setToast('Details fetched for all');
+                    } finally {
+                      setMapsEnriching(false);
+                    }
+                  }}
+                >{mapsEnriching ? `Fetching... ${mapsEnrichDone}` : 'Get details (all)'}</Button>
+              </div>
             </div>
 
             <div className="mt-3 overflow-x-auto rounded-lg ring-1 ring-black/5 dark:ring-white/10">
